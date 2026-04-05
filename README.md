@@ -29,6 +29,30 @@ Temp-humidity quick path (your current hardware)
 - Log in with the same username as `TARGET_USERNAME` in sketch (default `admin`).
 - Dashboard monitor should keep refreshing temperature and humidity every 10 seconds.
 
+Arduino Uno + ESP-01 + DHT22 wiring quick reference
+
+1. ESP-01 to Uno
+- ESP TX -> Uno D6 (software RX)
+- ESP RX <- Uno D7 (software TX) through level shift or resistor divider (Uno is 5V logic)
+- ESP VCC -> stable 3.3V supply
+- ESP GND -> Uno GND
+
+2. DHT22 (4-pin) to Uno
+- Pin 1 VCC -> 5V
+- Pin 2 DATA -> D4
+- Pin 3 NC -> no connection
+- Pin 4 GND -> GND
+- Add 10k pull-up between DATA and VCC if needed
+
+3. Arduino libraries needed
+- `DHT sensor library` by Adafruit
+- `Adafruit Unified Sensor`
+- `WiFiEspAT`
+
+4. Hardware notes
+- ESP-01 should run AT firmware compatible with `WiFiEspAT`.
+- Do not power ESP-01 directly from weak 3.3V pins if unstable; use a proper 3.3V supply.
+
 Step-by-step implementation guide for the Arduino signal flow:
 
 1. Prepare backend environment

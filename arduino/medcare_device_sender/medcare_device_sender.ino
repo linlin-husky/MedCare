@@ -1,105 +1,322 @@
-#include <WiFi.h>
-#include <HTTPClient.h>
-
-// Install the "DHT sensor library" by Adafruit and "Adafruit Unified Sensor" in Arduino IDE.
+#include <SoftwareSerial.h>
 #include <DHT.h>
 
-// Step 1: update these values for your Wi-Fi and backend server.
-const char* WIFI_SSID = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
-const char* SERVER_URL = "http://YOUR_RPI_OR_SERVER_IP:3000/api/device-signals/ingest";
-const char* DEVICE_TOKEN = "medcare-device-token";
+// Wiring:
+// ESP-01 TX -> Uno D2 (software RX)
+// ESP-01 RX -> Uno D3 (software TX) with level shifter
+// DHT22 DATA -> Uno D4
+// ESP VCC -> stable 3.3V
+// ESP GND -> Uno GND
+// ESP EN/CH_PD -> 3.3V
 
-const char* TARGET_USERNAME = "admin";
-const char* DEVICE_ID = "esp32-living-room-01";
+#define ESP_RX_PIN 2
+#define ESP_TX_PIN 3
+SoftwareSerial espSerial(ESP_RX_PIN, ESP_TX_PIN);
 
 #define DHTPIN 4
-#define DHTTYPE DHT11
+#define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
-void connectWifi() {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+const char* WIFI_SSID = "ARRIS-98A1";
+const char* WIFI_PASSWORD = "056361559514";
+const char* SERVER_HOST = "192.168.0.213";
+const int SERVER_PORT = 3000;
+const char* SERVER_PATH = "/api/device-signals/ingest";
+const char* DEVICE_TOKEN = "medcare-device-token";
+const char* TARGET_USERNAME = "peter";
+const char* DEVICE_ID = "uno-esp01-dht22-01";
 
-  Serial.print("Connecting to Wi-Fi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+bool wifiConnected = false;
+
+void sendAtCommand(const char* cmd, unsigned long timeout = 2000) {
+  Serial.print("AT: ");
+  Serial.println(cmd);
+  espSerial.println(cmd);
+  
+  unsigned long start = millis();
+  String response = "";
+  while ((millis() - start) < timeout) {
+    while (espSerial.available()) {
+      char c = (char)espSerial.read();
+      response += c;
+      Serial.write(c);
+    }
   }
-
   Serial.println();
-  Serial.print("Connected. IP: ");
-  Serial.println(WiFi.localIP());
 }
 
-float readTemperatureC() {
-  return dht.readTemperature();
-}
-
-float readHumidity() {
-  return dht.readHumidity();
-}
-
-void postSignal(const char* sensorType, float value, const char* unit) {
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("Wi-Fi disconnected. Reconnecting...");
-    connectWifi();
+String sendAtCommandWithResponse(const char* cmd, unsigned long timeout = 2000) {
+  espSerial.println(cmd);
+  
+  unsigned long start = millis();
+  String response = "";
+  while ((millis() - start) < timeout) {
+    while (espSerial.available()) {
+      char c = (char)espSerial.read();
+      response += c;
+    }
   }
+  return response;
+}
 
-  HTTPClient http;
-  http.begin(SERVER_URL);
-  http.addHeader("Content-Type", "application/json");
-  http.addHeader("x-device-token", DEVICE_TOKEN);
+bool initEsp() {
+  Serial.println("Initializing ESP-01...");
+  
+  espSerial.begin(115200);
+  delay(1500);
+  
+  // Flush any garbage from startup
+  while (espSerial.available()) {
+    espSerial.read();
+  }
+  
+  // Try AT command repeatedly until we get a clean response
+  for (int tries = 0; tries < 5; tries++) {
+    delay(200);
+    
+    while (espSerial.available()) {
+      espSerial.read();
+    }
+    
+    espSerial.println("AT");
+    delay(300);
+    
+    String resp = "";
+    unsigned long start = millis();
+    while ((millis() - start) < 800) {
+      while (espSerial.available()) {
+        char c = (char)espSerial.read();
+        resp += c;
+      }
+    }
+    
+    if (resp.indexOf("OK") >= 0) {
+      Serial.println("ESP-01 AT OK");
+      
+      // Set to Station mode (mode 1)
+      delay(200);
+      while (espSerial.available()) {
+        espSerial.read();
+      }
+      espSerial.println("AT+CWMODE=1");
+      delay(500);
+      
+      resp = "";
+      start = millis();
+      while ((millis() - start) < 1000) {
+        while (espSerial.available()) {
+          char c = (char)espSerial.read();
+          resp += c;
+        }
+      }
+      
+      if (resp.indexOf("OK") >= 0 || resp.indexOf("no change") >= 0) {
+        Serial.println("ESP-01 mode set to Station");
+        return true;
+      }
+    }
+  }
+  
+  Serial.println("ESP-01 not responding after retries");
+  return false;
+}
 
-  int battery = random(60, 100);
+bool connectWifi() {
+  Serial.print("Connecting to WiFi: ");
+  Serial.println(WIFI_SSID);
+  
+  // Clear any pending data
+  while (espSerial.available()) {
+    espSerial.read();
+  }
+  
+  String atCmd = "AT+CWJAP=\"";
+  atCmd += WIFI_SSID;
+  atCmd += "\",\"";
+  atCmd += WIFI_PASSWORD;
+  atCmd += "\"";
+  
+  // Try connection up to 3 times
+  for (int attempt = 0; attempt < 3; attempt++) {
+    Serial.print("WiFi attempt ");
+    Serial.println(attempt + 1);
+    
+    while (espSerial.available()) {
+      espSerial.read();
+    }
+    
+    espSerial.println(atCmd);
+    delay(100);
+    
+    unsigned long start = millis();
+    String resp = "";
+    bool gotOk = false;
+    
+    while ((millis() - start) < 12000) {
+      while (espSerial.available()) {
+        char c = (char)espSerial.read();
+        resp += c;
+        if (c == '\n' || resp.length() > 200) {
+          Serial.print("[RX] ");
+          Serial.println(resp);
+          
+          if (resp.indexOf("OK") >= 0) {
+            gotOk = true;
+            break;
+          }
+          resp = "";
+        }
+      }
+      if (gotOk) break;
+    }
+    
+    // Check final status
+    delay(500);
+    while (espSerial.available()) {
+      espSerial.read();
+    }
+    
+    espSerial.println("AT+CWJAP?");
+    delay(500);
+    
+    resp = "";
+    start = millis();
+    while ((millis() - start) < 2000) {
+      while (espSerial.available()) {
+        char c = (char)espSerial.read();
+        resp += c;
+      }
+    }
+    
+    if (resp.indexOf(WIFI_SSID) >= 0 || resp.indexOf("CONNECTED") >= 0) {
+      Serial.println("WiFi connected!");
+      wifiConnected = true;
+      return true;
+    }
+  }
+  
+  Serial.println("WiFi connection failed after retries");
+  wifiConnected = false;
+  return false;
+}
 
-  String body = "{";
-  body += "\"username\":\"" + String(TARGET_USERNAME) + "\",";
-  body += "\"deviceId\":\"" + String(DEVICE_ID) + "\",";
-  body += "\"sensorType\":\"" + String(sensorType) + "\",";
-  body += "\"value\":" + String(value, 1) + ",";
-  body += "\"unit\":\"" + String(unit) + "\",";
-  body += "\"battery\":" + String(battery) + ",";
-  body += "\"status\":\"ok\",";
-  body += "\"message\":\"temp-humidity signal sent from ESP32\",";
-  body += "\"source\":\"arduino\"";
-  body += "}";
-
-  int code = http.POST(body);
-  String response = http.getString();
-  http.end();
-
-  Serial.print("POST code: ");
-  Serial.println(code);
-  Serial.println(response);
+bool postSensorData(float temp, float humidity) {
+  if (!wifiConnected) {
+    if (!connectWifi()) {
+      return false;
+    }
+  }
+  
+  // Build JSON payload
+  String payload = "{";
+  payload += "\"username\":\"" + String(TARGET_USERNAME) + "\",";
+  payload += "\"deviceId\":\"" + String(DEVICE_ID) + "\",";
+  payload += "\"sensorType\":\"temperature\",";
+  payload += "\"value\":" + String(temp, 1) + ",";
+  payload += "\"unit\":\"C\",";
+  payload += "\"battery\":75,";
+  payload += "\"status\":\"ok\",";
+  payload += "\"source\":\"arduino\"";
+  payload += "}";
+  
+  // Connect to server
+  String cipStart = "AT+CIPSTART=\"TCP\",\"";
+  cipStart += SERVER_HOST;
+  cipStart += "\",";
+  cipStart += SERVER_PORT;
+  
+  sendAtCommand(cipStart.c_str(), 5000);
+  delay(1000);
+  
+  // Prepare HTTP request with headers
+  String httpRequest = "POST " + String(SERVER_PATH) + " HTTP/1.1\r\n";
+  httpRequest += "Host: " + String(SERVER_HOST) + ":" + String(SERVER_PORT) + "\r\n";
+  httpRequest += "Content-Type: application/json\r\n";
+  httpRequest += "x-device-token: " + String(DEVICE_TOKEN) + "\r\n";
+  httpRequest += "Content-Length: " + String(payload.length()) + "\r\n";
+  httpRequest += "Connection: close\r\n\r\n";
+  httpRequest += payload;
+  
+  // Send data length
+  String cipSend = "AT+CIPSEND=";
+  cipSend += httpRequest.length();
+  
+  sendAtCommand(cipSend.c_str(), 1000);
+  delay(500);
+  
+  // Send actual data
+  espSerial.print(httpRequest);
+  delay(1000);
+  
+  // Read response
+  String resp = "";
+  unsigned long start = millis();
+  while ((millis() - start) < 3000) {
+    while (espSerial.available()) {
+      char c = (char)espSerial.read();
+      resp += c;
+    }
+  }
+  
+  // Check for 201 or 200
+  bool success = (resp.indexOf("201") >= 0 || resp.indexOf("200") >= 0);
+  Serial.print("HTTP Response: ");
+  if (success) {
+    Serial.println("201 Created");
+  } else {
+    Serial.println(resp.substring(0, 100));
+  }
+  
+  // Close connection
+  sendAtCommand("AT+CIPCLOSE", 2000);
+  
+  return success;
 }
 
 void setup() {
   Serial.begin(115200);
-  delay(1000);
-  randomSeed(micros());
+  delay(2000);
+  
+  Serial.println("MedCare Sensor (Manual AT) - Starting");
+  
+  if (!initEsp()) {
+    Serial.println("ESP-01 init failed. Halting.");
+    while (true) {
+      delay(1000);
+    }
+  }
+  
+  if (!connectWifi()) {
+    Serial.println("WiFi connection failed. Will retry on sensor read.");
+  }
+  
   dht.begin();
-  connectWifi();
+  
+  Serial.println("Setup complete. Reading sensors...");
 }
 
 void loop() {
-  float temperatureC = readTemperatureC();
-  float humidity = readHumidity();
-
-  if (isnan(temperatureC) || isnan(humidity)) {
-    Serial.println("Failed to read from DHT sensor.");
-    delay(5000);
+  float temp = dht.readTemperature();
+  float humidity = dht.readHumidity();
+  
+  if (isnan(temp) || isnan(humidity)) {
+    Serial.println("DHT22 read failed, retrying in 10s...");
+    delay(10000);
     return;
   }
-
-  Serial.print("Sending Temperature (C): ");
-  Serial.println(temperatureC);
-  postSignal("temperature", temperatureC, "C");
-
-  Serial.print("Sending Humidity (%): ");
-  Serial.println(humidity);
-  postSignal("humidity", humidity, "%");
-
-  // Send every 10 seconds. Tune this for your real sensor frequency.
+  
+  Serial.print("Temperature: ");
+  Serial.print(temp);
+  Serial.print("C, Humidity: ");
+  Serial.print(humidity);
+  Serial.println("%");
+  
+  // Post temperature
+  if (postSensorData(temp, humidity)) {
+    Serial.println("Temperature posted successfully");
+  } else {
+    Serial.println("Temperature post failed");
+  }
+  
   delay(10000);
 }
