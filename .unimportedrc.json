@@ -1,0 +1,28 @@
+{
+  "ignoreUnresolved": [
+    [
+      "../services/api.js",
+      [
+        "src/components/Calendar.jsx"
+      ]
+    ],
+    [
+      "./services/api.js",
+      [
+        "src/App.jsx"
+      ]
+    ]
+  ],
+  "ignoreUnused": [
+    "cookie-parser",
+    "express",
+    "mongoose"
+  ],
+  "ignoreUnimported": [
+    "/Users/linlinfan/MedCare4Home system/MedCare4Home/Linlin-MedCare/src/components/Header.jsx",
+    "/Users/linlinfan/MedCare4Home system/MedCare4Home/Linlin-MedCare/src/components/ProfileEdit.jsx",
+    "/Users/linlinfan/MedCare4Home system/MedCare4Home/Linlin-MedCare/src/components/PublicLibrary.jsx",
+    "/Users/linlinfan/MedCare4Home system/MedCare4Home/Linlin-MedCare/src/components/UserProfile.jsx",
+    "/Users/linlinfan/MedCare4Home system/MedCare4Home/Linlin-MedCare/src/reducers/appReducer.js"
+  ]
+}

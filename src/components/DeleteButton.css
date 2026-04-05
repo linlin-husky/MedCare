@@ -1,0 +1,21 @@
+.delete-button-base {
+    padding: 6px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    min-width: 80px;
+    border: 1px solid #ef4444;
+    background-color: transparent;
+    color: #ef4444;
+}
+
+.delete-button-base.confirming {
+    background-color: #ef4444;
+    color: white;
+}
+
+.delete-button-base:hover {
+    opacity: 0.9;
+}

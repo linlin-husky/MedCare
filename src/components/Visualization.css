@@ -1,0 +1,449 @@
+/* Visualization.css */
+
+.viz-container {
+    padding: 20px 40px;
+    background-color: #f4f6fa;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #2c3e50;
+    box-sizing: border-box;
+}
+
+/* Header */
+.viz-header {
+    margin-bottom: 30px;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header-top h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.badge-ccm {
+    background-color: #1a1a2e;
+    color: white;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.header-controls {
+    display: flex;
+    gap: 15px;
+}
+
+.viz-profile-select {
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background: white;
+    font-size: 14px;
+    color: #444;
+}
+
+.btn-add-primary {
+    background-color: #6c5ce7;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(108, 92, 231, 0.2);
+}
+
+.patient-banner {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.patient-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #dfe6e9;
+    /* Placeholder color */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #636e72;
+}
+
+.patient-info h2 {
+    margin: 0;
+    font-size: 16px;
+    color: #2d3436;
+}
+
+.patient-info p {
+    margin: 4px 0 0 0;
+    font-size: 12px;
+    color: #b2bec3;
+}
+
+.patient-metrics {
+    margin-left: auto;
+    display: flex;
+    gap: 30px;
+}
+
+.metric-badge,
+.metric-simple {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.metric-badge .label,
+.metric-simple .label {
+    font-size: 11px;
+    color: #b2bec3;
+    font-weight: 500;
+}
+
+.metric-badge .value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2d3436;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.score {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 10px;
+}
+
+.score.positive {
+    background: #dfe6e9;
+    color: #2d3436;
+}
+
+.score.neutral {
+    background: #e0eafa;
+    color: #4a69bd;
+}
+
+/* Stats Row */
+.stats-row {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-count {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2d3436;
+    border-left: 3px solid #b2bec3;
+    padding-left: 10px;
+    line-height: 1;
+}
+
+.stat-count.highlight {
+    border-color: #e74c3c;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #636e72;
+    padding-left: 13px;
+}
+
+.stat-divider {
+    height: 40px;
+    width: 1px;
+    /* background: #dfe6e9; */
+    /* Removed divider lines to match cleaner look if desired, or keep */
+}
+
+/* Grid Layout */
+.viz-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1.2fr;
+    gap: 25px;
+}
+
+/* Common Card Styles */
+.viz-column h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d3436;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.history-card,
+.section-card,
+.visit-item {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
+    border: 1px solid #f5f6fa;
+}
+
+/* Left Column */
+.card-header-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.card-header-link h4 {
+    margin: 0;
+    font-size: 13px;
+    color: #636e72;
+    font-weight: 600;
+}
+
+.arrow {
+    color: #b2bec3;
+    font-size: 16px;
+}
+
+.card-content-text {
+    font-size: 13px;
+    color: #2d3436;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.chip-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.chip {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.chip.pill {
+    background-color: #f0edff;
+    /* lavender */
+    color: #6c5ce7;
+}
+
+.chip.clean {
+    background-color: transparent;
+    color: #2d3436;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.chip-count {
+    background: #dfe6e9;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 10px;
+}
+
+/* Middle Column */
+.vitals-grid-display {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.vital-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.vital-item.full-width {
+    grid-column: span 2;
+}
+
+.v-icon {
+    font-size: 16px;
+}
+
+.v-val {
+    font-size: 14px;
+    color: #2d3436;
+    font-weight: 600;
+}
+
+.card-split-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.card-split-header h3 {
+    margin: 0;
+}
+
+.btn-upload {
+    background: #f0edff;
+    color: #6c5ce7;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.file-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f6fa;
+    font-size: 13px;
+    color: #2d3436;
+    cursor: pointer;
+}
+
+.file-list li:last-child {
+    border-bottom: none;
+}
+
+.file-name {
+    text-decoration: underline;
+    text-decoration-color: #b2bec3;
+}
+
+/* Right Column */
+.visits-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: #6c5ce7;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.visit-item {
+    position: relative;
+    padding-bottom: 30px;
+    /* spacing for timeline look if desired, but using cards for now */
+}
+
+.visit-main-info {
+    margin-bottom: 6px;
+}
+
+.doc-name {
+    margin: 0;
+    font-size: 14px;
+    color: #2d3436;
+}
+
+.doc-specialty {
+    font-size: 12px;
+    color: #636e72;
+}
+
+.visit-tag {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 11px;
+    background: #f5f6fa;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #636e72;
+}
+
+.visit-meta {
+    display: flex;
+    gap: 15px;
+    font-size: 12px;
+    color: #636e72;
+    margin-top: 10px;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .viz-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .visits-column {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .viz-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .patient-banner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .patient-metrics {
+        margin-left: 0;
+        flex-wrap: wrap;
+    }
+
+    .stats-row {
+        overflow-x: auto;
+        padding-bottom: 10px;
+    }
+
+    .visits-column {
+        grid-column: span 1;
+    }
+}

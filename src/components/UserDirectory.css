@@ -1,0 +1,89 @@
+.directory-page {
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    color: #2c3e50;
+    margin-bottom: 30px;
+}
+
+.search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.search-button {
+    padding: 12px 25px;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.user-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.2s;
+}
+
+.user-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.user-avatar-placeholder {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #a8c1ff 0%, #3f2b96 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.user-info h3 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+    color: #2c3e50;
+}
+
+.user-handle {
+    margin: 0 0 8px;
+    font-size: 0.875rem;
+    color: #7f8c8d;
+}
+
+.user-stats {
+    font-size: 0.75rem;
+    color: #95a5a6;
+    font-weight: 500;
+}

@@ -1,0 +1,166 @@
+.public-library-page {
+  max-width: 85rem;
+  margin: 0 auto;
+}
+
+.filters-section {
+  background: var(--color-surface);
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 2rem;
+}
+
+.search-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.filters-section .search-group {
+  flex: 1;
+}
+
+.filters-section .search-input {
+  padding: 0.75rem 1rem;
+}
+
+.search-button {
+  background: var(--color-primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  white-space: nowrap;
+}
+
+.search-button:hover {
+  background: var(--color-primary-dark);
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.filter-row .filter-group {
+  min-width: 8rem;
+}
+
+.filter-row .filter-label {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.filter-row .filter-select,
+.filter-row .filter-input {
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  min-width: 7rem;
+}
+
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1.25rem;
+}
+
+.library-item-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.library-item-card .item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.library-item-card .item-name {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.library-item-card .item-condition {
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: var(--color-bg);
+}
+
+.item-category .category-tag {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+}
+
+.library-item-card .item-description {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.library-item-card .item-value {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+}
+
+.value-label {
+  color: var(--color-text-muted);
+}
+
+.value-amount {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.owner-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.owner-label {
+  color: var(--color-text-muted);
+}
+
+.owner-name {
+  font-weight: 500;
+}
+
+.owner-trust {
+  font-weight: 700;
+  font-size: 0.8125rem;
+}
+
+.library-item-card .item-actions {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 0.0625rem solid var(--color-border);
+}
+
+.borrow-button {
+  width: 100%;
+  background: var(--color-primary);
+  color: white;
+  padding: 0.625rem;
+  font-weight: 500;
+}
+
+.borrow-button:hover {
+  background: var(--color-primary-dark);
+}
+
