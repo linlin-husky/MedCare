@@ -19,7 +19,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 const char* WIFI_SSID = "ARRIS-98A1";
 const char* WIFI_PASSWORD = "056361559514";
-const char* SERVER_HOST = "192.168.0.213";
+const char* SERVER_HOST = "192.168.0.204";
 const int SERVER_PORT = 3000;
 const char* SERVER_PATH = "/api/device-signals/ingest";
 const char* DEVICE_TOKEN = "medcare-device-token";
