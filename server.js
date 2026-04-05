@@ -14,6 +14,7 @@ import medications from './models/medications.js';
 import vitals from './models/vitals.js';
 import medicalTests from './models/medicalTests.js';
 import symptoms from './models/symptoms.js';
+import deviceSignals from './models/deviceSignals.js';
 
 // Controllers
 import createAuthController from './routes/auth.js';
@@ -23,6 +24,7 @@ import createMedicationRoutes from './routes/medications.js';
 import createVitalsRoutes from './routes/vitals.js';
 import createMedicalTestRoutes from './routes/medicalTests.js';
 import createSymptomRoutes from './routes/symptoms.js';
+import createDeviceSignalRoutes from './routes/deviceSignals.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,7 +46,8 @@ const models = {
   medications,
   vitals,
   medicalTests,
-  symptoms
+  symptoms,
+  deviceSignals
 };
 
 // Auth controller
@@ -70,6 +73,7 @@ app.use('/api/medications', createMedicationRoutes(models));
 app.use('/api/vitals', createVitalsRoutes(models));
 app.use('/api/medical-tests', createMedicalTestRoutes(models));
 app.use('/api/symptoms', createSymptomRoutes(models));
+app.use('/api/device-signals', createDeviceSignalRoutes(models));
 
 // ============ SPA CATCH-ALL (MUST BE LAST) ============
 

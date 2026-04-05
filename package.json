@@ -8,7 +8,9 @@
     "build": "vite build",
     "start": "node server.js",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "send:device-signal": "node scripts/send_device_signal.js",
+    "send:temp-humidity": "node scripts/send_temp_humidity_signals.js"
   },
   "dependencies": {
     "chart.js": "^4.5.1",

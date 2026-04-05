@@ -1,3 +1,68 @@
+MedCare4Home is being extended to support wearable and sensor telemetry from Arduino or a Wi-Fi capable board.
+
+Device signal endpoint:
+- `POST /api/device-signals/ingest`
+- Required header: `x-device-token`
+- Required body fields: `username`, `deviceId`, `sensorType`, `value`
+
+The dashboard now includes an Arduino Signal Monitor card that polls the server for recent readings and shows whether the device is online or stale.
+
+Temp-humidity quick path (your current hardware)
+
+1. Start backend
+- Start MongoDB.
+- Export token: `export DEVICE_INGEST_TOKEN=medcare-device-token`.
+- Run `npm run build` then `npm start`.
+
+2. Send temp/humidity from laptop first
+- Run `npm run send:temp-humidity`.
+- Open Dashboard and confirm Temperature and Humidity values appear in the monitor card.
+
+3. Move to Arduino + temp-humidity sensor
+- Open `arduino/medcare_device_sender/medcare_device_sender.ino`.
+- Install `DHT sensor library` and `Adafruit Unified Sensor` in Arduino IDE.
+- Set Wi-Fi and `SERVER_URL` to your Raspberry Pi IP, for example `http://192.168.1.30:3000/api/device-signals/ingest`.
+- Wire DHT data pin to GPIO 4 by default (change `DHTPIN` in code if needed).
+- Upload and open Serial Monitor.
+
+4. Verify on dashboard
+- Log in with the same username as `TARGET_USERNAME` in sketch (default `admin`).
+- Dashboard monitor should keep refreshing temperature and humidity every 10 seconds.
+
+Step-by-step implementation guide for the Arduino signal flow:
+
+1. Prepare backend environment
+- Start MongoDB.
+- Set `DEVICE_INGEST_TOKEN` in your shell, for example: `export DEVICE_INGEST_TOKEN=medcare-device-token`.
+- Start backend and frontend bundle server with `npm start`.
+
+2. Build frontend once before start (or on every change cycle)
+- Run `npm run build`.
+
+3. Seed or create a target user
+- The ingest endpoint requires a valid existing username in payload.
+- You can use an existing user such as `admin`, or register your own user in the app.
+
+4. Send a simulated signal from your laptop
+- Run `npm run send:device-signal`.
+- Optional env overrides:
+  - `MEDCARE_BASE_URL` (default `http://localhost:3000`)
+  - `MEDCARE_TARGET_USER` (default `admin`)
+  - `MEDCARE_DEVICE_ID` (default `esp32-living-room-01`)
+  - `MEDCARE_SENSOR_TYPE` (default `heart-rate`)
+  - `MEDCARE_SENSOR_VALUE` (default `78`)
+  - `MEDCARE_SENSOR_UNIT` (default `bpm`)
+
+5. Verify in UI
+- Log in and open Dashboard.
+- Check the Arduino Signal Monitor card for latest reading and online/offline status.
+
+6. Move to physical Arduino or ESP32 device
+- Open `arduino/medcare_device_sender/medcare_device_sender.ino`.
+- Replace Wi-Fi SSID/password and server URL with your Raspberry Pi or MedCare server IP.
+- Keep `x-device-token` the same as backend `DEVICE_INGEST_TOKEN`.
+- Upload sketch and monitor Serial output.
+
 This is our intelligent lend and borrow tracker. It helps keep track of items you’ve lent out with ease. It helps log what you lent, to whom, when it was lent, and when it’s expected back. It monitors return status effortlessly, and if the borrower is also a registered user, you can send friendly in-app reminders to ensure timely returns.
 Whether it’s books, games, tools, kitchenware, or other everyday essentials, our smart system helps you stay organized, avoid confusion, and never lose track of shared items again.
 

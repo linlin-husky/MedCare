@@ -267,6 +267,39 @@ function deleteVital(id) {
   }).then(handleResponse);
 }
 
+function getDeviceSignals(username, limit = 12) {
+  const params = new URLSearchParams();
+  if (username) params.append('username', username);
+  if (limit) params.append('limit', String(limit));
+
+  const queryString = params.toString();
+  const url = queryString ? `/api/device-signals?${queryString}` : '/api/device-signals';
+
+  return fetch(url, {
+    credentials: 'include'
+  }).then(handleResponse);
+}
+
+function ingestDeviceSignal(data, token) {
+  return fetch('/api/device-signals/ingest', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-device-token': token
+    },
+    body: JSON.stringify(data)
+  }).then(handleResponse);
+}
+
+function acknowledgeDeviceSignal(id, data) {
+  return fetch(`/api/device-signals/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data)
+  }).then(handleResponse);
+}
+
 function getAllUsers() {
   return fetch('/api/users', {
     credentials: 'include'
@@ -321,5 +354,9 @@ export {
   // Vitals
   getVitals,
   addVital,
-  deleteVital
+  deleteVital,
+  // Device signals
+  getDeviceSignals,
+  ingestDeviceSignal,
+  acknowledgeDeviceSignal
 };

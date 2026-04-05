@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import * as api from '../services/api.js';
+import DeviceSignalPanel from './DeviceSignalPanel.jsx';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -668,6 +669,8 @@ function DashboardContent({ user, navigateTo, selectedUsername, setSelectedUsern
         </div>
 
       </div>
+
+      <DeviceSignalPanel user={user} selectedUsername={selectedUsername} />
 
       {/* Motivational Quote */}
 
