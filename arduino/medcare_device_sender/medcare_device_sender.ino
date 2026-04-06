@@ -19,7 +19,8 @@ DHT dht(DHTPIN, DHTTYPE);
 
 const char* WIFI_SSID = "ARRIS-98A1";
 const char* WIFI_PASSWORD = "056361559514";
-const char* SERVER_HOST = "192.168.0.204";
+// const char* SERVER_HOST = "192.168.0.204"; //Pi IP
+const char* SERVER_HOST = "192.168.0.213";//Mac IP
 const int SERVER_PORT = 3000;
 const char* SERVER_PATH = "/api/device-signals/ingest";
 const char* DEVICE_TOKEN = "medcare-device-token";
@@ -34,11 +35,9 @@ void sendAtCommand(const char* cmd, unsigned long timeout = 2000) {
   espSerial.println(cmd);
   
   unsigned long start = millis();
-  String response = "";
   while ((millis() - start) < timeout) {
     while (espSerial.available()) {
       char c = (char)espSerial.read();
-      response += c;
       Serial.write(c);
     }
   }
@@ -61,58 +60,87 @@ String sendAtCommandWithResponse(const char* cmd, unsigned long timeout = 2000) 
 
 bool initEsp() {
   Serial.println("Initializing ESP-01...");
-  
-  espSerial.begin(115200);
-  delay(1500);
-  
-  // Flush any garbage from startup
-  while (espSerial.available()) {
-    espSerial.read();
-  }
-  
-  // Try AT command repeatedly until we get a clean response
-  for (int tries = 0; tries < 5; tries++) {
+  const long bootBauds[] = {9600, 115200};
+
+  for (unsigned int baudIndex = 0; baudIndex < sizeof(bootBauds) / sizeof(bootBauds[0]); baudIndex++) {
+    long bootBaud = bootBauds[baudIndex];
+    espSerial.end();
     delay(200);
-    
+    espSerial.begin(bootBaud);
+    delay(2500);
+
+    // Flush any garbage from startup.
     while (espSerial.available()) {
       espSerial.read();
     }
-    
-    espSerial.println("AT");
-    delay(300);
-    
-    String resp = "";
-    unsigned long start = millis();
-    while ((millis() - start) < 800) {
-      while (espSerial.available()) {
-        char c = (char)espSerial.read();
-        resp += c;
-      }
-    }
-    
-    if (resp.indexOf("OK") >= 0) {
-      Serial.println("ESP-01 AT OK");
-      
-      // Set to Station mode (mode 1)
-      delay(200);
+
+    // Try AT command repeatedly until we get a clean response.
+    for (int tries = 0; tries < 8; tries++) {
+      delay(300);
+
       while (espSerial.available()) {
         espSerial.read();
       }
-      espSerial.println("AT+CWMODE=1");
-      delay(500);
-      
-      resp = "";
-      start = millis();
-      while ((millis() - start) < 1000) {
+
+      espSerial.println("AT");
+      delay(400);
+
+      String resp = "";
+      unsigned long start = millis();
+      while ((millis() - start) < 1500) {
         while (espSerial.available()) {
           char c = (char)espSerial.read();
           resp += c;
         }
       }
-      
-      if (resp.indexOf("OK") >= 0 || resp.indexOf("no change") >= 0) {
-        Serial.println("ESP-01 mode set to Station");
-        return true;
+
+      if (resp.indexOf("OK") >= 0) {
+        Serial.print("ESP-01 AT OK at ");
+        Serial.println(bootBaud);
+
+        // If module currently runs at 115200, move it to 9600 for SoftwareSerial stability.
+        if (bootBaud == 115200) {
+          while (espSerial.available()) {
+            espSerial.read();
+          }
+          espSerial.println("AT+UART_DEF=9600,8,1,0,0");
+          delay(1000);
+          espSerial.end();
+          delay(200);
+          espSerial.begin(9600);
+          delay(500);
+        }
+
+        // Set to Station mode (mode 1)
+        while (espSerial.available()) {
+          espSerial.read();
+        }
+        espSerial.println("AT+CWMODE=1");
+        delay(700);
+
+        resp = "";
+        start = millis();
+        while ((millis() - start) < 1500) {
+          while (espSerial.available()) {
+            char c = (char)espSerial.read();
+            resp += c;
+          }
+        }
+
+        if (resp.indexOf("OK") >= 0 || resp.indexOf("no change") >= 0) {
+          Serial.println("ESP-01 mode set to Station");
+
+            // Disable command echo to reduce serial traffic and RAM churn on Uno.
+            while (espSerial.available()) {
+              espSerial.read();
+            }
+            espSerial.println("ATE0");
+            delay(400);
+            while (espSerial.available()) {
+              espSerial.read();
+            }
+          return true;
+        }
       }
     }
   }
@@ -206,65 +234,133 @@ bool postSensorData(float temp, float humidity) {
       return false;
     }
   }
-  
-  // Build JSON payload
-  String payload = "{";
-  payload += "\"username\":\"" + String(TARGET_USERNAME) + "\",";
-  payload += "\"deviceId\":\"" + String(DEVICE_ID) + "\",";
-  payload += "\"sensorType\":\"temperature\",";
-  payload += "\"value\":" + String(temp, 1) + ",";
-  payload += "\"unit\":\"C\",";
-  payload += "\"battery\":75,";
-  payload += "\"status\":\"ok\",";
-  payload += "\"source\":\"arduino\"";
-  payload += "}";
-  
-  // Connect to server
-  String cipStart = "AT+CIPSTART=\"TCP\",\"";
-  cipStart += SERVER_HOST;
-  cipStart += "\",";
-  cipStart += SERVER_PORT;
-  
-  sendAtCommand(cipStart.c_str(), 5000);
-  delay(1000);
-  
-  // Prepare HTTP request with headers
-  String httpRequest = "POST " + String(SERVER_PATH) + " HTTP/1.1\r\n";
-  httpRequest += "Host: " + String(SERVER_HOST) + ":" + String(SERVER_PORT) + "\r\n";
-  httpRequest += "Content-Type: application/json\r\n";
-  httpRequest += "x-device-token: " + String(DEVICE_TOKEN) + "\r\n";
-  httpRequest += "Content-Length: " + String(payload.length()) + "\r\n";
-  httpRequest += "Connection: close\r\n\r\n";
-  httpRequest += payload;
-  
-  // Send data length
-  String cipSend = "AT+CIPSEND=";
-  cipSend += httpRequest.length();
-  
-  sendAtCommand(cipSend.c_str(), 1000);
-  delay(500);
-  
-  // Send actual data
-  espSerial.print(httpRequest);
-  delay(1000);
-  
-  // Read response
-  String resp = "";
-  unsigned long start = millis();
-  while ((millis() - start) < 3000) {
-    while (espSerial.available()) {
-      char c = (char)espSerial.read();
-      resp += c;
-    }
+
+  // Build a compact JSON payload with fixed buffers to avoid String fragmentation on Uno.
+  char tempValue[16];
+  dtostrf(temp, 0, 1, tempValue);
+  while (tempValue[0] == ' ') {
+    memmove(tempValue, tempValue + 1, strlen(tempValue));
+  }
+
+  char payload[140];
+  int payloadLen = snprintf(
+    payload,
+    sizeof(payload),
+    "{\"username\":\"%s\",\"deviceId\":\"%s\",\"sensorType\":\"temperature\",\"value\":%s,\"unit\":\"C\"}",
+    TARGET_USERNAME,
+    DEVICE_ID,
+    tempValue
+  );
+
+  if (payloadLen <= 0 || payloadLen >= (int)sizeof(payload)) {
+    Serial.println("Payload build failed.");
+    return false;
   }
   
+  // Connect to server (fixed buffer avoids String heap fragmentation on Uno).
+  char cipStart[96];
+  int cipStartLen = snprintf(
+    cipStart,
+    sizeof(cipStart),
+    "AT+CIPSTART=\"TCP\",\"%s\",%d",
+    SERVER_HOST,
+    SERVER_PORT
+  );
+  if (cipStartLen <= 0 || cipStartLen >= (int)sizeof(cipStart)) {
+    Serial.println("CIPSTART build failed.");
+    return false;
+  }
+
+  sendAtCommand(cipStart, 5000);
+  delay(1000);
+  
+  // Prepare HTTP request with fixed buffer and exact byte count.
+  char httpRequest[300];
+  int reqLen = snprintf(
+    httpRequest,
+    sizeof(httpRequest),
+    "POST %s HTTP/1.1\r\n"
+    "Host: %s:%d\r\n"
+    "Content-Type: application/json\r\n"
+    "x-device-token: %s\r\n"
+    "Content-Length: %d\r\n"
+    "Connection: close\r\n\r\n"
+    "%s",
+    SERVER_PATH,
+    SERVER_HOST,
+    SERVER_PORT,
+    DEVICE_TOKEN,
+    payloadLen,
+    payload
+  );
+
+  if (reqLen <= 0 || reqLen >= (int)sizeof(httpRequest)) {
+    Serial.println("Request build failed.");
+    return false;
+  }
+
+  Serial.print("Request length: ");
+  Serial.println(reqLen);
+  
+  // Send data length
+  char cipSend[32];
+  int cipSendLen = snprintf(cipSend, sizeof(cipSend), "AT+CIPSEND=%d", reqLen);
+  if (cipSendLen <= 0 || cipSendLen >= (int)sizeof(cipSend)) {
+    Serial.println("CIPSEND build failed.");
+    return false;
+  }
+
+  String sendResp = sendAtCommandWithResponse(cipSend, 3000);
+  Serial.print("CIPSEND reply: ");
+  Serial.println(sendResp);
+  if (sendResp.indexOf(">") < 0) {
+    Serial.println("Did not receive CIPSEND prompt.");
+    return false;
+  }
+  delay(200);
+  
+  // Send actual data
+  espSerial.write((const uint8_t*)httpRequest, reqLen);
+  espSerial.flush();
+  delay(200);
+  
+  // Read response with bounded memory usage (Uno has limited SRAM).
+  char respSnippet[128];
+  int snippetLen = 0;
+  bool saw200 = false;
+  bool saw201 = false;
+  unsigned long totalBytes = 0;
+  unsigned long start = millis();
+  while ((millis() - start) < 8000) {
+    while (espSerial.available()) {
+      char c = (char)espSerial.read();
+      totalBytes++;
+      Serial.write(c);
+
+      if (snippetLen < (int)sizeof(respSnippet) - 1) {
+        respSnippet[snippetLen++] = c;
+      }
+    }
+  }
+  respSnippet[snippetLen] = '\0';
+  Serial.println();
+  Serial.print("Raw HTTP resp length: ");
+  Serial.println(totalBytes);
+
+  if (strstr(respSnippet, " 200 ") != NULL || strstr(respSnippet, "HTTP/1.1 200") != NULL) {
+    saw200 = true;
+  }
+  if (strstr(respSnippet, " 201 ") != NULL || strstr(respSnippet, "HTTP/1.1 201") != NULL) {
+    saw201 = true;
+  }
+
   // Check for 201 or 200
-  bool success = (resp.indexOf("201") >= 0 || resp.indexOf("200") >= 0);
+  bool success = saw200 || saw201;
   Serial.print("HTTP Response: ");
   if (success) {
     Serial.println("201 Created");
   } else {
-    Serial.println(resp.substring(0, 100));
+    Serial.println(respSnippet);
   }
   
   // Close connection
